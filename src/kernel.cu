@@ -239,15 +239,33 @@ __device__ glm::vec3 computeVelocityChange(int N, int iSelf, const glm::vec3 *po
 	float numOfNeigh3 = 0.f;
 
 	for (int index = 0; index < N; index++) {
-		// Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
-		if (index != iSelf && glm::distance(dev_pos[iSelf], dev_pos[index]) < rule1Distance) {
-			perceivedCenter += dev_pos[index];
-		}
+		if (index != iSelf) {
+			float d = glm::distance(dev_pos[iSelf], dev_pos[index]);
+			// Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
+			if (d < rule1Distance) {
+				perceivedCenter += dev_pos[index];
+				numOfNeigh1++;
+			}
 
-		// Rule 2: boids try to stay a distance d away from each other
-		//else if ()
+			// Rule 2: boids try to stay a distance d away from each other
+			if (d < rule2Distance) {
+				c -= (dev_pos[index] - dev_pos[iSelf]);
+			}
+
+			// Rule 3: boids try to match the speed of surrounding boids
+			if (d < rule1Distance) {
+				perceivedVel += dev_vel1[index];
+				numOfNeigh3++;
+			}
+		}
 	}
-	// Rule 3: boids try to match the speed of surrounding boids
+
+	perceivedCenter /= numOfNeigh1;
+	perceivedCenter = (perceivedCenter - dev_pos[iSelf]) * rule1Scale;
+	c *= rule2Scale;
+	perceivedVel /= numOfNeigh3;
+	perceivedVel *= rule1Scale;
+
 	return glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
