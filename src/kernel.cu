@@ -43,15 +43,15 @@ void checkCUDAError(const char *msg, int line = -1) {
 
 // LOOK-1.2 Parameters for the boids algorithm.
 // These worked well in our reference implementation.
-#define rule1Distance 5.0f
-#define rule2Distance 3.0f
-#define rule3Distance 5.0f
+#define rule1Distance 15.0f
+#define rule2Distance 4.0f
+#define rule3Distance 17.0f
 
 #define rule1Scale 0.01f
 #define rule2Scale 0.1f
 #define rule3Scale 0.1f
 
-#define maxSpeed 1.0f
+#define maxSpeed 20.0f
 
 /*! Size of the starting area in simulation space. */
 #define scene_scale 100.0f
@@ -403,8 +403,22 @@ __global__ void kernUpdateVelNeighborSearchCoherent(
 */
 void Boids::stepSimulationNaive(float dt) {
 	// TODO-1.2 - use the kernels you wrote to step the simulation forward in time.
+	dim3 fullBlocksPerGrid((numObjects + blockSize - 1) / blockSize);
 
+	kernUpdateVelocityBruteForce << <fullBlocksPerGrid, blockSize >> > (numObjects, 
+		dev_pos, dev_vel1, dev_vel2);
+	checkCUDAErrorWithLine("kernUpdateVelocityBruteForce failed!");
+
+	kernUpdatePos << <fullBlocksPerGrid, blockSize >> > (numObjects, dt, 
+		dev_pos, dev_vel1);
+	checkCUDAErrorWithLine("kernUpdatePos failed!");
+
+	//kernUpdateVelocityBruteForce(numObjects, dev_pos, dev_vel1, dev_vel2);
+	//kernUpdatePos(numObjects, dt, dev_pos, dev_vel1);
 	// TODO-1.2 ping-pong the velocity buffers
+	glm::vec3 *temp_vel = dev_vel1;
+	dev_vel1 = dev_vel2;
+	dev_vel2 = temp_vel;
 }
 
 void Boids::stepSimulationScatteredGrid(float dt) {
