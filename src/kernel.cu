@@ -240,33 +240,39 @@ __device__ glm::vec3 computeVelocityChange(int N, int iSelf, const glm::vec3 *po
 
 	for (int index = 0; index < N; index++) {
 		if (index != iSelf) {
-			float d = glm::distance(dev_pos[iSelf], dev_pos[index]);
+			float d = glm::distance(pos[iSelf], pos[index]);
 			// Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
 			if (d < rule1Distance) {
-				perceivedCenter += dev_pos[index];
+				perceivedCenter += pos[index];
 				numOfNeigh1++;
 			}
 
 			// Rule 2: boids try to stay a distance d away from each other
 			if (d < rule2Distance) {
-				c -= (dev_pos[index] - dev_pos[iSelf]);
+				c -= (pos[index] - pos[iSelf]);
 			}
 
 			// Rule 3: boids try to match the speed of surrounding boids
-			if (d < rule1Distance) {
-				perceivedVel += dev_vel1[index];
+			if (d < rule3Distance) {
+				perceivedVel += vel[index];
 				numOfNeigh3++;
 			}
 		}
 	}
 
-	perceivedCenter /= numOfNeigh1;
-	perceivedCenter = (perceivedCenter - dev_pos[iSelf]) * rule1Scale;
-	c *= rule2Scale;
-	perceivedVel /= numOfNeigh3;
-	perceivedVel *= rule1Scale;
+	if (numOfNeigh1 > 0) {
+		perceivedCenter /= numOfNeigh1;
+		perceivedCenter = (perceivedCenter - pos[iSelf]) * rule1Scale;
+	}
 
-	return glm::vec3(0.0f, 0.0f, 0.0f);
+	c *= rule2Scale;
+
+	if (numOfNeigh3 > 0) {
+		perceivedVel /= numOfNeigh3;
+		perceivedVel *= rule3Scale;
+	}
+
+	return perceivedCenter + c + perceivedVel;
 }
 
 /**
@@ -275,7 +281,15 @@ __device__ glm::vec3 computeVelocityChange(int N, int iSelf, const glm::vec3 *po
 */
 __global__ void kernUpdateVelocityBruteForce(int N, glm::vec3 *pos,
 	glm::vec3 *vel1, glm::vec3 *vel2) {
+	int index = threadIdx.x + (blockIdx.x * blockDim.x);
+	if (index >= N) {
+		return;
+	}
+	//glm::vec3 thisPos = pos[index];
+	//thisPos += vel[index] * dt;
+
 	// Compute a new velocity based on pos and vel1
+	glm::vec3 velChange = computeVelocityChange(N, index, pos, vel);
 	// Clamp the speed
 	// Record the new velocity into vel2. Question: why NOT vel1?
 }
