@@ -5,6 +5,8 @@ Project 1 - Flocking**
   * [LinkedIn](https://www.linkedin.com/in/alexis-ward47/), [personal website](https://www.alexis-ward.tech/)
 * Tested on: Windows 10, i7-8750H CPU @ 2.20GHz 16GB, GTX 1050 Ti (Same borrowed computer as last time, for the second half of the assignment.)
 
+![](images/git1.gif)
+
 # README
 
 I still have yet to get my new laptop, so for the beginning of the project, I borrowed Nick Magarino's. My first few commits are from his git account because of that, but he has not touched my code.
@@ -22,6 +24,7 @@ For each implementation, changing the block size has a varying effect. For the n
 Until I charted it, I thought the coherent uniform grid had no performance improvements in my code, but it made it run faster! This is because we do not have to compare the shuffled and unshuffled buffers.
 
 Changing cell width to 27 dramatically decreased the frame rate. This could have made my program check more empty neighboring cells than neighboring boids.
+
 
 
 Interestingly, when visualize mode is disabled, my program sometimes has a hard time runninng less than 10000 boids.
